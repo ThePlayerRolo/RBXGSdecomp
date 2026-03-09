@@ -1347,10 +1347,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Sky.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\v8datamodel\Team.cpp"
 				>
 			</File>

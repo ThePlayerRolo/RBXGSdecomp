@@ -6,7 +6,7 @@
 #include <boost/signal.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include "View.h"
+#include "RbxView/View.h"
 #include "v8datamodel/Workspace.h"
 #include "RenderLib/RenderScene.h"
 #include "QuadVolume.h"
