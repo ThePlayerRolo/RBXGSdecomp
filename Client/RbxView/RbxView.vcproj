@@ -262,6 +262,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\View.h"
+				>
+			</File>
+			<File
 				RelativePath=".\WedgeMesh.h"
 				>
 			</File>

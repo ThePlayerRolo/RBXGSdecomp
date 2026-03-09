@@ -798,6 +798,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\v8datamodel\CustomMesh.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\v8datamodel\Decal.h"
 					>
 				</File>
@@ -1343,6 +1347,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Sky.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\v8datamodel\Team.cpp"
 				>
 			</File>
@@ -1388,7 +1396,6 @@
 			</File>
 			<File
 				RelativePath=".\gui\Widget.cpp"
-
 				>
 			</File>
 		</Filter>
