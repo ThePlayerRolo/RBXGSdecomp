@@ -1307,6 +1307,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\v8datamodel\CustomMesh.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\v8datamodel\Decal.cpp"
 				>
 			</File>

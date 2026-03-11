@@ -6,9 +6,12 @@
 namespace RBX 
 {
 	const char* sDecal = "Decal";
+	const char* sTexture = "Texture";
 	const Reflection::PropDescriptor<Decal, TextureId> Decal::prop_Texture("Texture", "Appearance", &Decal::getTexture, &Decal::setTexture, Reflection::PropertyDescriptor::STANDARD);
 	const Reflection::PropDescriptor<Decal, float> Decal::prop_Specular("Specular", "Appearance", &Decal::getSpecular, &Decal::setSpecular, Reflection::PropertyDescriptor::STANDARD);
 	const Reflection::PropDescriptor<Decal, float> Decal::prop_Shiny("Shiny", "Appearance", &Decal::getShiny, &Decal::setShiny, Reflection::PropertyDescriptor::STANDARD);
+	const Reflection::PropDescriptor<Texture, float> Texture::prop_StudsPerTileU("StudsPerTileU", "Appearance", &Texture::getStudsPerTileU, &Texture::setStudsPerTileU, Reflection::PropertyDescriptor::STANDARD);
+	const Reflection::PropDescriptor<Texture, float> Texture::prop_StudsPerTileV("StudsPerTileV", "Appearance", &Texture::getStudsPerTileV, &Texture::setStudsPerTileV, Reflection::PropertyDescriptor::STANDARD);
 
 	Decal::Decal()
 		:texture(),

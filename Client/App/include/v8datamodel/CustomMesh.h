@@ -4,6 +4,7 @@
 #include "reflection/reflection.h"
 #include "util/MeshId.h"
 #include "util/TextureId.h"
+#include "v8tree/Instance.h"
 
 namespace RBX {
 	extern const char* sSpecialMesh;
@@ -46,11 +47,20 @@ namespace RBX {
 		}
 		void setVertColor(const G3D::Vector3& value);
 		const float getAlpha() const;
-		const MeshId getMeshId() const;
+
+		const MeshId getMeshId() const
+		{
+			return meshId;
+		}
+
 		void setMeshId(const MeshId& value);
-		const TextureId getTextureId() const;
+		const TextureId getTextureId() const
+		{
+			return textureId;
+		}
 		void setTextureId(const TextureId& value);
 	protected:
 		virtual bool askSetParent(const Instance*) const;
 	};
+
 };
