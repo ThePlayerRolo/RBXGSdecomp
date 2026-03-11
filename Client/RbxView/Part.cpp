@@ -3,11 +3,13 @@
 #include "reflection/property.h"
 #include "v8datamodel/Surfaces.h"
 #include "v8datamodel/CustomMesh.h"
+#include "v8datamodel/Workspace.h"
+#include "v8datamodel/FaceInstance.h"
+#include "v8datamodel/Decal.h"
 #include <boost/signal.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include "RbxView/View.h"
-#include "v8datamodel/Workspace.h"
 #include "RenderLib/RenderScene.h"
 #include "QuadVolume.h"
 #include "BrickMesh.h"
@@ -401,6 +403,115 @@ namespace RBX {
 		//78.70% matching
 		Part::~Part() {
 			//has Notifier remove listener
+		}
+
+		void Decal::onDecalPropertyChanged(const RBX::Reflection::PropertyDescriptor* descriptor)
+		{
+			if (descriptor == &FaceInstance::prop_Face)
+			{
+				invalidateMesh();
+			} else if (descriptor == &RBX::Decal::prop_Texture || descriptor == &RBX::Decal::prop_Specular || descriptor == &RBX::Decal::prop_Shiny)
+			{
+				invalidateMaterial();
+			}
+		}
+
+		
+		//99.88% matching
+		void Decal::onDecalAncestorChanged(boost::shared_ptr<RBX::Instance> ancestor)
+		{
+			RBX::Workspace* workspace = RBX::Workspace::findWorkspace(decal.get());
+			RBX::Instance* parent;
+
+			//same error as the PartChunk variant
+			if (!workspace || (parent = decal.get()->getParent(), workspace == parent) || !parent || !parent->isDescendentOf(workspace))
+			{
+				view->sceneManager->removeModel(this);
+			}
+		}
+
+		void Decal::updateMesh()
+		{
+			if (partInstance.get())
+			{
+				G3D::Vector3 size = partInstance->getPartSizeXml();
+				size *= specialShape->getScale();
+
+				RBX::Part::PartType partType = partInstance->getPartType();
+				if (partType)
+				{
+					switch (partType)
+					{
+					case RBX::Part::CYLINDER_PART:
+						mesh = RBX::View::MeshFactory<CylinderAlongXMesh, 1>::createDecal(size, decal->getFace());
+						break;
+					case RBX::Part::BLOCK_PART:
+						mesh = RBX::View::MeshFactory<PBBMesh, 4>::createDecal(size, decal->getFace());
+						break;
+					case RBX::Part::BALL_PART:
+						mesh = RBX::View::MeshFactory<SphereMesh, 1>::createDecal(size, decal->getFace());
+						break;
+					}
+				}
+				if (specialShape)
+				{
+					switch(specialShape->getMeshType())
+					{
+					case SpecialShape::WEDGE_MESH:
+						mesh = RBX::View::MeshFactory<WedgeMesh, 1>::createDecal(size, decal->getFace());
+						break;
+					case SpecialShape::HEAD_MESH:
+						mesh = RBX::View::MeshFactory<HeadMesh, 1>::createDecal(size, decal->getFace());
+						break;
+					case SpecialShape::TORSO_MESH:
+						mesh = RBX::View::MeshFactory<TorsoMesh, 1>::createDecal(size, decal->getFace());
+						break;
+					case SpecialShape::SPHERE_MESH:
+						mesh = RBX::View::MeshFactory<SphereMesh, 1>::createDecal(size, decal->getFace());
+						break;
+					case SpecialShape::CYLINDER_MESH:
+						mesh = RBX::View::MeshFactory<CylinderAlongXMesh, 1>::createDecal(size, decal->getFace());
+						break;
+					case SpecialShape::BRICK_MESH:
+						mesh = RBX::View::MeshFactory<PBBMesh, 4>::createDecal(size, decal->getFace());
+						break;
+					default:
+						break;
+					}
+				}
+				radius = sqrt(2.0f) * 0.5 * primaryComponent(size);
+			}
+		}
+		
+		//75.14% matching
+		G3D::ReferenceCountedPointer<RBX::Render::Material> Decal::getMaterial()
+		{
+			if (!materialInvalid)
+			{
+				std::string textureFile;
+				if (RBX::ContentProvider::singleton().requestContentFile(decal->getTexture(), textureFile))
+				{
+					material = new RBX::Render::Material();
+					RBX::Render::TextureProxy* texProxy = new RBX::Render::TextureProxy(*view->textureManager.get(), textureFile, false);
+					material->appendLevel(texProxy, G3D::Color3::WHITE, decal->getSpecular(), decal->getShiny(), 0.0f, 0.0f);
+				}
+			}
+
+			return material;
+		}
+		
+		Decal::~Decal() {}
+
+		//75.92% matching
+		//more boost connection problems
+		Decal::Decal(RBX::Decal &decal, RBX::PartInstance &partInstance, RBX::View::View *view)
+			: PartChunk(RBX::Render::Chunk::DECAL_OFFSET, RBX::shared_from<RBX::PartInstance>(&partInstance), view),
+			decal(RBX::shared_from<RBX::Decal>(&decal)),
+			decalAncestorChangedConnection(),
+			decalPropertyChangedConnection()
+		{
+			decalAncestorChangedConnection = RBX::Instance::event_ancestryChanged.connect(&decal, boost::slot<boost::function<void(boost::shared_ptr<RBX::Instance>)>>(boost::bind(&Decal::onDecalAncestorChanged, this, _1)));
+			decalPropertyChangedConnection = RBX::Instance::event_propertyChanged.connect(&decal, boost::slot<boost::function<void(const RBX::Reflection::PropertyDescriptor*)>>(boost::bind(&Decal::onDecalPropertyChanged, this, _1)));
 		}
 	};
 };

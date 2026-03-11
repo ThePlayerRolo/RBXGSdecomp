@@ -20,11 +20,24 @@ namespace RBX
 		static const Reflection::PropDescriptor<Decal, float> prop_Shiny;
 
 		Decal();
-		TextureId getTexture() const;
+		TextureId getTexture() const
+		{
+			return texture;
+		}
+
 		void setTexture(TextureId);
-		float getSpecular() const;
+
+		float getSpecular() const
+		{
+			return specular;
+		}
+
 		void setSpecular(float);
-		float getShiny() const;
+
+		float getShiny() const
+		{
+			return shiny;
+		}
 		void setShiny(float);
 	};
 };

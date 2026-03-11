@@ -17,21 +17,6 @@ namespace RBX
 	{
 		setName("Decal");
 	}
-	
-	float Decal::getShiny() const 
-	{
-		return shiny;
-	}
-
-	float Decal::getSpecular() const 
-	{
-		return specular;
-	};
-
-	TextureId Decal::getTexture() const 
-	{
-		return texture;
-	}
 
 	void Decal::setTexture(TextureId value) 
 	{

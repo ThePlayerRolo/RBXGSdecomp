@@ -11,6 +11,7 @@ namespace RBX
 {
 	class SpecialShape;
 	class Instance;
+	class Decal;
 
 	namespace View 
 	{
@@ -69,6 +70,23 @@ namespace RBX
 			virtual void onEvent(const RBX::PartInstance* source, RBX::CanAggregateChanged event);
 		private:
 			bool usesMegaTexture() const;
+			virtual void updateMesh();
+		};
+
+		class Decal : public PartChunk
+		{
+		private:
+			boost::shared_ptr<RBX::Decal> decal;
+			boost::signals::scoped_connection decalAncestorChangedConnection;
+			boost::signals::scoped_connection decalPropertyChangedConnection;
+		public:
+			Decal(RBX::Decal& decal, RBX::PartInstance& partInstance, RBX::View::View* view);
+			virtual ~Decal();
+			virtual G3D::ReferenceCountedPointer<RBX::Render::Material> getMaterial();
+		protected:
+			void onDecalPropertyChanged(const RBX::Reflection::PropertyDescriptor* descriptor);
+			void onDecalAncestorChanged(boost::shared_ptr<RBX::Instance> ancestor);
+		private:
 			virtual void updateMesh();
 		};
 
