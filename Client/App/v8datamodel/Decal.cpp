@@ -44,4 +44,28 @@ namespace RBX
 			raisePropertyChanged(prop_Shiny);
 		}
 	}
+
+	void Texture::setStudsPerTileU(float value)
+	{
+		if (studsPerTile.x != value && value > 0.0f)
+		{
+			studsPerTile.x = value;
+			raisePropertyChanged(prop_StudsPerTileU);
+		}
+	}
+
+	void Texture::setStudsPerTileV(float value)
+	{
+		if (studsPerTile.y != value && value > 0.0f)
+		{
+			studsPerTile.y = value;
+			raisePropertyChanged(prop_StudsPerTileV);
+		}
+	}
+
+	Texture::Texture()
+		: studsPerTile(2.0f, 2.0f)
+	{
+		setName("Texture");
+	}
 };

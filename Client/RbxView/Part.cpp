@@ -430,17 +430,22 @@ namespace RBX {
 			}
 		}
 
+		//38.85% matching
+		//would probably be way higher if it weren't for the fact that the part type switch case is above where it should be
+		//i legit don't know why it isn't in its proper position
 		void Decal::updateMesh()
 		{
 			if (partInstance.get())
 			{
 				G3D::Vector3 size = partInstance->getPartSizeXml();
-				size *= specialShape->getScale();
-
-				RBX::Part::PartType partType = partInstance->getPartType();
-				if (partType)
+				if (specialShape)
 				{
-					switch (partType)
+					size *= specialShape->getScale();
+				}
+			
+				if (partInstance->getPartType())
+				{
+					switch (partInstance->getPartType())
 					{
 					case RBX::Part::CYLINDER_PART:
 						mesh = RBX::View::MeshFactory<CylinderAlongXMesh, 1>::createDecal(size, decal->getFace());
@@ -453,6 +458,7 @@ namespace RBX {
 						break;
 					}
 				}
+
 				if (specialShape)
 				{
 					switch(specialShape->getMeshType())
@@ -483,17 +489,19 @@ namespace RBX {
 			}
 		}
 		
-		//75.14% matching
+		//75.61% matching
 		G3D::ReferenceCountedPointer<RBX::Render::Material> Decal::getMaterial()
 		{
-			if (!materialInvalid)
+			if (materialInvalid)
 			{
 				std::string textureFile;
 				if (RBX::ContentProvider::singleton().requestContentFile(decal->getTexture(), textureFile))
 				{
-					material = new RBX::Render::Material();
+					RBX::Render::Material* newMat = new RBX::Render::Material();
+					material = newMat;
 					RBX::Render::TextureProxy* texProxy = new RBX::Render::TextureProxy(*view->textureManager.get(), textureFile, false);
 					material->appendLevel(texProxy, G3D::Color3::WHITE, decal->getSpecular(), decal->getShiny(), 0.0f, 0.0f);
+					materialInvalid = false;
 				}
 			}
 
@@ -513,5 +521,132 @@ namespace RBX {
 			decalAncestorChangedConnection = RBX::Instance::event_ancestryChanged.connect(&decal, boost::slot<boost::function<void(boost::shared_ptr<RBX::Instance>)>>(boost::bind(&Decal::onDecalAncestorChanged, this, _1)));
 			decalPropertyChangedConnection = RBX::Instance::event_propertyChanged.connect(&decal, boost::slot<boost::function<void(const RBX::Reflection::PropertyDescriptor*)>>(boost::bind(&Decal::onDecalPropertyChanged, this, _1)));
 		}
+
+		//99.88% matching
+		void Texture::onTextureAncestorChanged(boost::shared_ptr<RBX::Instance> ancestor)
+		{
+			RBX::Workspace* workspace = RBX::Workspace::findWorkspace(texture.get());
+			RBX::Instance* parent;
+
+			//same error as the PartChunk variant
+			if (!workspace || (parent = texture.get()->getParent(), workspace == parent) || !parent || !parent->isDescendentOf(workspace))
+			{
+				view->sceneManager->removeModel(this);
+			}
+		}
+
+		//99.71% matching
+		//Branching :pray:
+		void Texture::onTexturePropertyChanged(const RBX::Reflection::PropertyDescriptor *descriptor)
+		{
+			if (descriptor != &FaceInstance::prop_Face)
+			{
+				if (descriptor == &RBX::Decal::prop_Texture || descriptor == &RBX::Decal::prop_Specular || descriptor == &RBX::Decal::prop_Shiny)
+				{
+					invalidateMaterial();
+					return;
+				}
+			}
+			if (descriptor != &RBX::Texture::prop_StudsPerTileU && descriptor != &RBX::Texture::prop_StudsPerTileV)
+			{
+				return;
+			}
+			invalidateMesh();
+		}
+
+		//75.62% matching
+		G3D::ReferenceCountedPointer<RBX::Render::Material> Texture::getMaterial()
+		{
+			if (materialInvalid)
+			{
+				std::string textureFile;
+				if (RBX::ContentProvider::singleton().requestContentFile(texture->getTexture(), textureFile))
+				{
+					RBX::Render::Material* newMat = new RBX::Render::Material();
+					material = newMat;
+					RBX::Render::TextureProxy* texProxy = new RBX::Render::TextureProxy(*view->textureManager.get(), textureFile, true);
+					material->appendLevel(texProxy, G3D::Color3::WHITE, texture->getSpecular(), texture->getShiny(), 0.0f, 0.0f);
+					materialInvalid = false;
+				}
+			}
+
+			return material;
+		}
+		
+		Texture::~Texture()
+		{
+		}
+
+		//38.85% matching
+		//just like decals
+		void Texture::updateMesh()
+		{
+			if (partInstance.get())
+			{
+				G3D::Vector3 size = partInstance->getPartSizeXml();
+				if (specialShape)
+				{
+					size *= specialShape->getScale();
+				}
+			
+				if (partInstance->getPartType())
+				{
+					switch (partInstance->getPartType())
+					{
+					case RBX::Part::CYLINDER_PART:
+						mesh = RBX::View::MeshFactory<CylinderAlongXMesh, 1>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					case RBX::Part::BLOCK_PART:
+						mesh = RBX::View::MeshFactory<PBBMesh, 4>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					case RBX::Part::BALL_PART:
+						mesh = RBX::View::MeshFactory<SphereMesh, 1>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					}
+				}
+
+				if (specialShape)
+				{
+					switch(specialShape->getMeshType())
+					{
+					case SpecialShape::WEDGE_MESH:
+						mesh = RBX::View::MeshFactory<WedgeMesh, 1>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					case SpecialShape::HEAD_MESH:
+						mesh = RBX::View::MeshFactory<HeadMesh, 1>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					case SpecialShape::TORSO_MESH:
+						mesh = RBX::View::MeshFactory<TorsoMesh, 1>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					case SpecialShape::SPHERE_MESH:
+						mesh = RBX::View::MeshFactory<SphereMesh, 1>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					case SpecialShape::CYLINDER_MESH:
+						mesh = RBX::View::MeshFactory<CylinderAlongXMesh, 1>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					case SpecialShape::BRICK_MESH:
+						mesh = RBX::View::MeshFactory<PBBMesh, 4>::createTexture(size, texture->getFace(), texture->getStudsPerTile());
+						break;
+					default:
+						break;
+					}
+				}
+				radius = sqrt(2.0f) * 0.5 * primaryComponent(size);
+			}
+		}
+		
+
+		//75.92%
+		//similar to decal's
+		Texture::Texture(RBX::Texture &texture, RBX::PartInstance &parentPart, RBX::View::View *view)
+			: PartChunk(RBX::Render::Chunk::TEXTURE_OFFSET, RBX::shared_from<RBX::PartInstance>(&parentPart), view),
+			texture(RBX::shared_from<RBX::Texture>(&texture)),
+			textureAncestorChangedConnection(),
+			texturePropertyChangedConnection()
+		{
+			textureAncestorChangedConnection = RBX::Instance::event_ancestryChanged.connect(&texture, boost::slot<boost::function<void(boost::shared_ptr<RBX::Instance>)>>(boost::bind(&Texture::onTextureAncestorChanged, this, _1)));
+			texturePropertyChangedConnection = RBX::Instance::event_propertyChanged.connect(&texture, boost::slot<boost::function<void(const RBX::Reflection::PropertyDescriptor*)>>(boost::bind(&Texture::onTexturePropertyChanged, this, _1)));
+		}
+
 	};
 };
